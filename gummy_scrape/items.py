@@ -1,14 +1,50 @@
-# -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
-
+# from scrapy import Item, Field
 import scrapy
 
-
 class GummyScrapeItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    add_date.Field()
+    title.Field()
+    price.Field()
+    suburb.Field()
+    city.Field()
+    province.Field()
+    make.Field()
+    model.Field()
+    for_sale_by.Field()
+    kilometers.Field()
+    transmission.Field()
+    fuel_type.Field()
+    colour.Field()
+    power.Field()
+    torque.Field()
+    economy.Field()
+    gears.Field()
+    length.Field()
+    seats.Field()
+    tank_capacity.Field()
+    service_intervals.Field()
+    link.Field()
+        # add_date = Field()
+    # title = Field()
+    # price = Field()
+    # suburb = Field()
+    # city = Field()
+    # province = Field()
+    # make = Field()
+    # model = Field()
+    # for_sale_by = Field()
+    # kilometers = Field()
+    # transmission = Field()
+    # fuel_type = Field()
+    # colour = Field()
+    # power = Field()
+    # torque = Field()
+    # economy = Field()
+    # gears = Field()
+    # length = Field()
+    # seats = Field()
+    # tank_capacity = Field()
+    # service_intervals = Field()
+    # link = Field()
+
+

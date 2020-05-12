@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import datetime
+import os
+import csv
+import glob
+
 
 def make_info(response,value):
     return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::a/span/text()').get()  
@@ -42,7 +46,11 @@ class GumtreeSpider(scrapy.Spider):
 
 
     def parse_car(self,response):
-        add_url = response.url
+
+        # item = GummyScrapeItem()
+
+        # item['car_url'] = response.url
+        link = response.url
         title = response.xpath('///h1/text()').get()
         price = response.xpath('//*[@class="ad-price"]/text()').get()
         #Clean price text: 
@@ -72,8 +80,10 @@ class GumtreeSpider(scrapy.Spider):
         tank_capacity  = description_info(response,'Fuel Tank Capacity')
         service_intervals = description_info(response,'Service Intervals')
 
+        # yield item
+
         yield{
-            'date':datetime.datetime.now(),
+            'add_date':datetime.datetime.now(),
             'title':title,
             'price':price,
             'suburb':suburb,
@@ -90,15 +100,12 @@ class GumtreeSpider(scrapy.Spider):
             'torque':torque,
             'economy':economy,
             'gears':gears,
-            'length ':length ,
+            'length ':length,
             'seats':seats,
-            'tank_capacity':tank_capacity,
+            'tank_size':tank_capacity,
             'service_intervals':service_intervals,
-            'url': add_url
-        }
-
-
-
+            'link': link,
+            }
 
 
 

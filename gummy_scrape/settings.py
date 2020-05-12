@@ -1,25 +1,23 @@
-# -*- coding: utf-8 -*-
-
-# Scrapy settings for gummy_scrape project
-#
-# For simplicity, this file contains only settings considered important or
-# commonly used. You can find more settings consulting the documentation:
-#
-#     https://docs.scrapy.org/en/latest/topics/settings.html
-#     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
 BOT_NAME = 'gummy_scrape'
 
 SPIDER_MODULES = ['gummy_scrape.spiders']
 NEWSPIDER_MODULE = 'gummy_scrape.spiders'
 
-
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0'
 
-# Obey robots.txt rules
 ROBOTSTXT_OBEY = False
+
+DB_SETTINGS = {
+    'db': 'cars_scraped',
+    'user': 'root',
+    'password': 'ballsack12!',
+    'host': 'localhost',
+}
+
+ITEM_PIPELINES = {
+'gummy_scrape.pipelines.GumtreePipeline': 100,
+}
+
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -62,11 +60,6 @@ ROBOTSTXT_OBEY = False
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
 
-# Configure item pipelines
-# See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'gummy_scrape.pipelines.GummyScrapePipeline': 300,
-#}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
