@@ -10,7 +10,7 @@ ROBOTSTXT_OBEY = False
 DB_SETTINGS = {
     'db': 'cars_scraped',
     'user': 'root',
-    'password': 'ballsack12!',
+    'password': 'root4834calbon',
     'host': 'localhost',
 }
 

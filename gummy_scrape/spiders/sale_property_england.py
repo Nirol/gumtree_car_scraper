@@ -12,14 +12,22 @@ from scrapy.utils import spider
 from items import GummyScrapeItem
 
 
+SEARCH_PARAMS_ORDER  =	{
+  "Location": {"Order":1, "Distace": "off"},
+  "model": "Mustang",
+  "year": 1964
+}
+
+
+
 def make_info(response,value):
-    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::a/span/text()').get()  
+    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::a/span/text()').get()
 
 def car_info(response,value):
-    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::span/text()').get()      
+    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::span/text()').get()
 
 def description_info(response,value):
-    return response.xpath('//div[@class="description-content"]/b[text()="'+ value +'"]/following-sibling::text()').get()  
+    return response.xpath('//div[@class="description-content"]/b[text()="'+ value +'"]/following-sibling::text()').get()
 
 
 class GumtreeSpider(scrapy.Spider):
@@ -45,13 +53,13 @@ class GumtreeSpider(scrapy.Spider):
             print("absolute_province_url:"+absolute_province_url)
             yield scrapy.Request(absolute_province_url)
 
-            # list of location links per province 
+            # list of location links per province
             for location in response.xpath('//div[@class="foldableList"]/ul[contains(@class,"finalsub")]/li/span/a/@href').extract()[1:]:
                 absolute_location_url = 'https://www.gumtree.co.za' + location
                 yield scrapy.Request(absolute_location_url)
 
                 # Car add links per page -  for a specific location
-                car_links = response.xpath('//*[@class="related-ad-title"]/@href').extract() 
+                car_links = response.xpath('//*[@class="related-ad-title"]/@href').extract()
                 for car in car_links:
                     absolute_car_url = 'https://www.gumtree.co.za' + car
                     yield scrapy.Request(absolute_car_url,callback= self.parse_car2)
@@ -100,7 +108,7 @@ class GumtreeSpider(scrapy.Spider):
         link = response.url
         title = response.xpath('///h1/text()').get()
         price = response.xpath('//*[@class="ad-price"]/text()').get()
-        #Clean price text: 
+        #Clean price text:
         # price =  price.splitlines()[1].split('R')[1]
         # province = response.xpath('//h2/span/span/a/span/text()').extract()[0]
         # suburb = response.xpath('//*[@class="location"]/a[1]/text()').extract()
