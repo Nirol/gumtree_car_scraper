@@ -9,17 +9,8 @@ import glob
 
 from scrapy.utils import spider
 
-from items import GummyScrapeItem
 
 
-def make_info(response,value):
-    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::a/span/text()').get()  
-
-def car_info(response,value):
-    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::span/text()').get()      
-
-def description_info(response,value):
-    return response.xpath('//div[@class="description-content"]/b[text()="'+ value +'"]/following-sibling::text()').get()  
 
 
 class GumtreeSpider(scrapy.Spider):

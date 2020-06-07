@@ -1,167 +1,73 @@
 # -*- coding: utf-8 -*-
-from urllib.request import Request
+import time
 
 import scrapy
-import datetime
-import os
-import csv
-import glob
+from scrapy import Selector, Spider
+from scrapy.http import Response
 
-from scrapy.utils import spider
-
-from items import GummyScrapeItem
+from scrapy.linkextractors import LinkExtractor
 
 
-SEARCH_PARAMS_ORDER  =	{
-  "Location": {"Order":1, "Distace": "off"},
-  "model": "Mustang",
-  "year": 1964
-}
+from items import GummyHouseForSale, HOUSE_SELECTOR
+from parsing.parse_house_for_sale import get_field_raw_output, \
+    process_raw_output, save_to_item
 
+HOUSE_LINK_RE = "\/p\/property-for-sale\/"
 
+class GumtreeSpider(Spider):
+    name = 'gummy_scrape_single_house'
+    allowed_domains = ['gumtree.com']
+    #start_urls = ['https://www.gumtree.com/search?search_category=property-for-sale&seller_type=trade&q=&distance=15&max_price=156000&min_property_number_beds=1&max_property_number_beds=4&photos_filter=true&search_scope=true']
 
-def make_info(response,value):
-    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::a/span/text()').get()
-
-def car_info(response,value):
-    return response.xpath('//div[@class="attribute"]/span[text()="'+ value +':"]/following-sibling::span/text()').get()
-
-def description_info(response,value):
-    return response.xpath('//div[@class="description-content"]/b[text()="'+ value +'"]/following-sibling::text()').get()
-
-
-class GumtreeSpider(scrapy.Spider):
-    name = 'gummy_scrape'
-    #allowed_domains = ['https://gumtree.co.za/']
-    start_urls = ['https://gumtree.co.za/s-cars-bakkies/v1c9077p1']
-
-
-    # def start_requests(self):
-    #     yield Request(
-    #         'https://gumtree.co.za/s-cars-bakkies/v1c9077p1',
-    #         headers={
-    #             'User-Agent': "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1"})
-
+    def start_requests(self):
+        a = 'https://www.gumtree.com/search?featured_filter=false&q=house+for+sale&property_number_beds=4&search_category=property-for-sale&urgent_filter=false&property_type=house&sort=date&search_scope=false&photos_filter=false&search_location=London&tl=&distance=0.0001'
+        b = "https://www.gumtree.com/search?featured_filter=false&q=house+for+sale&property_number_beds=4&search_category=property-for-sale&urgent_filter=false&property_type=house&sort=date&search_scope=false&photos_filter=false&search_location=London&tl=&distance=0.0001"
+        yield scrapy.Request(b,
+                             callback=self.parse, errback=self.handle_error )
 
 
     def parse(self, response):
-        # Province links - from the main page in "Cars and Bakkies"
 
-        for province in response.xpath('//*[@class="finalsub inventoryView more"]/li/span[@class="text"]/a/@href').extract()[:9]:
-            print("inv province")
-            absolute_province_url = 'https://www.gumtree.co.za' + province
-            print("absolute_province_url:"+absolute_province_url)
-            yield scrapy.Request(absolute_province_url)
-
-            # list of location links per province
-            for location in response.xpath('//div[@class="foldableList"]/ul[contains(@class,"finalsub")]/li/span/a/@href').extract()[1:]:
-                absolute_location_url = 'https://www.gumtree.co.za' + location
-                yield scrapy.Request(absolute_location_url)
-
-                # Car add links per page -  for a specific location
-                car_links = response.xpath('//*[@class="related-ad-title"]/@href').extract()
-                for car in car_links:
-                    absolute_car_url = 'https://www.gumtree.co.za' + car
-                    yield scrapy.Request(absolute_car_url,callback= self.parse_car2)
-                    #yield from self.parse_car2(absolute_car_url)
-                    #yield from self.parse_car2(absolute_car_url)
-
-
-
-                #
-                # next_page_url =  response.xpath('//*[@class=" icon-pagination-right"]/@href').get()
-
-                # if next_page_url:
-                #     absolute_next_page_url = 'https://www.gumtree.co.za' + next_page_url
-                #     yield scrapy.Request(absolute_next_page_url)
+        le = LinkExtractor(allow = HOUSE_LINK_RE)
+        links = le.extract_links(response)
+        for link in links:
+            time.sleep(3)
+            print(link.url)
+            yield scrapy.Request(link.url, callback=self.analyze_house, errback=self.handle_error )
 
 
 
 
-
-    def parse_car2(self,response):
-        item = GummyScrapeItem()
-        item['link'] = response.url
-        print("123")
-        print("123")
-        print("123")
-        city = response.xpath('//*[@class="location"]/a[2]/text()').extract()
-        item['city'] = city
-        print("123")
-
-        title = response.xpath('///h1/text()').get()
-        price = response.xpath('//*[@class="ad-price"]/text()').get()
-        print("123")
-        print("123")
-        suburb = response.xpath('//*[@class="location"]/a[1]/text()').extract()
-        city = response.xpath('//*[@class="location"]/a[2]/text()').extract()
-        item['city'] = city
+    def back_to_parsing(self, url):
+        print("did i get here?")
+        yield scrapy.Request(url, callback=self.parse, errback=self.handle_error)
 
 
+    def handle_error(self, response: Response):
+        print("encounter error:")
+        print(response)
+        print(response.value.response.status)
+        print(response.value.response.url)
+        print(response.request.url)
+        from selenium import webdriver
+        driver = webdriver.Firefox()
+        driver.get(response.value.response.url)
 
-    def parse_car(self,response):
+        html_source = driver.page_source
+
+        print("a")
+        self.analyze_house(html_source)
 
 
-        item = GummyScrapeItem()
-        print("inside parse_car")
-        item['car_url'] = response.url
-        link = response.url
-        title = response.xpath('///h1/text()').get()
-        price = response.xpath('//*[@class="ad-price"]/text()').get()
-        #Clean price text:
-        # price =  price.splitlines()[1].split('R')[1]
-        # province = response.xpath('//h2/span/span/a/span/text()').extract()[0]
-        # suburb = response.xpath('//*[@class="location"]/a[1]/text()').extract()
-        # city = response.xpath('//*[@class="location"]/a[2]/text()').extract()
-        #
-        # # the next items are obtained with a function (top of page)
-        # make = make_info(response,'Make')
-        # model = make_info(response,'Model')
-        #
-        # # the next items are obtained with a function (top of page)
-        # for_sale_by = car_info(response,'For Sale By')
-        # kilometers = car_info(response,'Kilometers')
-        # transmission = car_info(response,'Transmission')
-        # fuel_type = car_info(response,'Fuel Type')
-        # colour = car_info(response,'Colour')
-        #
-        # # the next items are obtained with a function (top of page)
-        # power = description_info(response,'Power')
-        # torque = description_info(response,'Torque')
-        # economy  = description_info(response,'Economy')
-        # gears  = description_info(response,'Gears')
-        # length  = description_info(response,'Length')
-        # seats  = description_info(response,'Seats')
-        # tank_capacity  = description_info(response,'Fuel Tank Capacity')
-        # service_intervals = description_info(response,'Service Intervals')
+    def analyze_house(self, response):
+        # response = pickle.load(open("gummy_scrape/save_response.p", "rb"))
+        selector = Selector(text=response.body)
+        item = GummyHouseForSale()
+        for field_key in HOUSE_SELECTOR:
+            print(field_key)
 
+            raw_output = get_field_raw_output(selector, field_key)
+            clean_string_output = process_raw_output(field_key, raw_output)
+            save_to_item(item, field_key, clean_string_output)
         yield item
-        #
-        # yield{
-        #     'add_date':datetime.datetime.now(),
-        #     'title':title,
-        #     'price':price,
-        #     'suburb':suburb,
-        #     'city':city,
-        #     'province':province,
-        #     'make':make,
-        #     'model':model,
-        #     'for_sale_by':for_sale_by,
-        #     'kilometres':kilometers,
-        #     'transmission':transmission,
-        #     'fuel_type':fuel_type,
-        #     'colour':colour,
-        #     'power':power,
-        #     'torque':torque,
-        #     'economy':economy,
-        #     'gears':gears,
-        #     'length ':length,
-        #     'seats':seats,
-        #     'tank_size':tank_capacity,
-        #     'service_intervals':service_intervals,
-        #     'link': link,
-        #     }
-        #
-        #
-
 

@@ -17,7 +17,7 @@ def main(name):
 
 if __name__ == '__main__':
     print('[*] beginning main thread')
-    name = "scrapy crawl gummy_scrape"
+    name = "scrapy crawl books"    # -a start_url="http://some_url""
     #name = "scrapy crawl spa"
     main(name)
     print('[*] main thread exited')

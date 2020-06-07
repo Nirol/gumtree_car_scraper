@@ -1,8 +1,15 @@
 import pymysql
 from scrapy.exceptions import NotConfigured
 
+from items import GummyHouseForSale
+TABLE_NAME = "`houses`"
+TABLE_FIELDS = "(`Ad_ID`, `Name`, `County`, `City`, `Price`, `Seller`, `ConcealedPhone`, `RevealURL`, `Posted`, `SellerType`, `Bedrooms`, `PropertyType`, `Description`, `VatNum`)"
+INSERT_SQL_COMMAND = "INSERT INTO " + TABLE_NAME +"  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
 
-class GumtreePipeline(object):
+
+
+
+class GumtreePipelineSql(object):
     def __init__(self,db,user,password,host): 
         self.db = db
         self.user = user
@@ -21,40 +28,34 @@ class GumtreePipeline(object):
         return cls(db,user,password,host)
 
     def open_spider(self,spider):
-        print("\n THE spider of mens \n")
+        spider.logger.info("open_spider method in pipeline")
         self.conn = pymysql.connect(db=self.db,
                                     user=self.user, password = self.password,
                                     host=self.host,
                                     charset = 'utf8', use_unicode=True)
         self.cursor = self.conn.cursor()
 
-    def process_item(self,item,spider):
-        print("\n SQL TIME BEBE \n")
-        sql = ("INSERT INTO gumtree VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+
+
+
+    def process_item(self,item: GummyHouseForSale,spider):
+        spider.logger.info('Processing a new item:')
+        spider.logger.info("AD ID:" + item.get("ad_id"))
+        sql = (INSERT_SQL_COMMAND)
         self.cursor.execute(sql,
                              (
-                                item.get("add_date"),
-                                item.get("title"),  
-                                item.get("price"),  
-                                item.get("suburb"),  
-                                item.get("city"),  
-                                item.get("province"),  
-                                item.get("make"),  
-                                item.get("model"),  
-                                item.get("for_sale_by"),  
-                                item.get("kilometers"),  
-                                item.get("transmission"),  
-                                item.get("fuel_type"),  
-                                item.get("colour"),  
-                                item.get("power"),  
-                                item.get("torque"),  
-                                item.get("economy"),  
-                                item.get("gears"),  
-                                item.get("length"),  
-                                item.get("seats"),  
-                                item.get("tank_size"),  
-                                item.get("service_intervals"),  
-                                item.get("link"),                   
+                                 int(item.get("ad_id")),
+                                item.get("name"),
+                                item.get("county"),
+                                int(item.get("price")),
+                                item.get("seller"),
+                                int(item.get("concealed_phone")),
+                                item.get("reveal_url"),
+                                item.get("posted"),
+                                item.get("seller_type"),
+                                int(item.get("bedrooms")),
+                                item.get("property_type")
+
                               )
                             )
         self.conn.commit()
